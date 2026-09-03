@@ -1,14 +1,8 @@
-mport React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { createClient } from "@supabase/supabase-js";
-import React, { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = "https://bulczammsjhzdsbttgir.supabase.co"; 
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1bGN6YW1tc2poemRzYnR0Z2lyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzMzgwNjYsImV4cCI6MjEwMzkxNDA2Nn0.KGLzK_tpWcCYJ2h4ymJ5LRqm6EC81fDjcciUpUR6Ouc"; 
-// Inicialización de Supabase
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || 'https://your-supabase-url.supabase.co';
-const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY || 'your-anon-key';
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -35,7 +29,6 @@ function formatDateLong(iso) {
   const d = new Date(iso + "T00:00:00");
   return d.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" });
 }
-const MAKE_WEBHOOK_URL = 'https://hook.eu1.make.com/ktmubugjk3fbjrlfi7pchttq8ec7m9u9';
 
 export default function App() {
   const [view, setView] = useState("landing");
@@ -45,30 +38,14 @@ export default function App() {
   const [blockedSlots, setBlockedSlots] = useState([]);
   const [loaded, setLoaded] = useState(false);
   const [user, setUser] = useState(null);
-  const [session, setSession] = useState(null);
-  const [view, setView] = useState('booking'); // 'booking', 'admin', 'history'
-  
-  // Formulario de reserva
-  const [patientName, setPatientName] = useState('');
-  const [patientEmail, setPatientEmail] = useState('');
-  const [bookingDate, setBookingDate] = useState('');
-  const [bookingTime, setBookingTime] = useState('');
-  const [service, setService] = useState('Fisioterapia General');
-  const [statusMsg, setStatusMsg] = useState('');
-
-  // Historial y citas para el panel
-  const [appointments, setAppointments] = useState([]);
-  const [medicalRecords, setMedicalRecords] = useState([]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
-      setSession(session);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
-      setSession(session);
     });
 
     return () => subscription.unsubscribe();
@@ -397,53 +374,10 @@ function ReservarTab({ user, services, bookings, blockedSlots, addBooking }) {
   const [phone, setPhone] = useState("");
   const [error, setError] = useState("");
   const [confirmed, setConfirmed] = useState(null);
-  // Función para procesar la reserva e invocar el webhook de Make
-  const handleBookingSubmit = async (e) => {
-    e.preventDefault();
-    setStatusMsg('Procesando reserva...');
 
   useEffect(() => {
     if (services.length > 0 && !serviceId) {
       setServiceId(services[0].id);
-    try {
-      // 1. Guardar cita en Supabase
-      const { data, error } = await supabase
-        .from('appointments')
-        .insert([
-          {
-            patient_name: patientName,
-            patient_email: patientEmail,
-            date: bookingDate,
-            time: bookingTime,
-            service: service,
-            status: 'confirmed'
-          }
-        ])
-        .select();
-
-      if (error) throw error;
-
-      // 2. Disparar webhook a Make (Google Calendar)
-      await fetch(MAKE_WEBHOOK_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          patient_name: patientName,
-          patient_email: patientEmail,
-          date: bookingDate,
-          time: bookingTime,
-          service: service
-        })
-      });
-
-      setStatusMsg('¡Cita reservada con éxito y añadida a Google Calendar!');
-      setPatientName('');
-      setPatientEmail('');
-      setBookingDate('');
-      setBookingTime('');
-    } catch (err) {
-      console.error(err);
-      setStatusMsg('Error al procesar la reserva. Inténtalo de nuevo.');
     }
   }, [services, serviceId]);
 
@@ -560,23 +494,6 @@ function AgendaTab({ bookings, services, removeBooking, updateBooking }) {
       </div>
     );
   }
-    <div style={{ fontFamily: 'system-ui, sans-serif', maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>
-        <h2>Alex Sánchez Fisioterapia</h2>
-        <nav>
-          <button onClick={() => setView('booking')} style={{ marginRight: '10px', padding: '8px 12px' }}>Reservar Cita</button>
-          <button onClick={() => setView('admin')} style={{ padding: '8px 12px' }}>Panel Control</button>
-        </nav>
-      </header>
-
-      {view === 'booking' && (
-        <section style={{ background: '#f9f9f9', padding: '20px', borderRadius: '8px' }}>
-          <h3>Solicitar Cita Online</h3>
-          <form onSubmit={handleBookingSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-            <div>
-              <label style={{ display: 'block', marginBottom: '5px' }}>Nombre y Apellidos:</label>
-              <input type="text" value={patientName} onChange={(e) => setPatientName(e.target.value)} required style={{ width: '100%', padding: '8px' }} />
-            </div>
 
   return (
     <div>
@@ -607,10 +524,6 @@ function AgendaTab({ bookings, services, removeBooking, updateBooking }) {
                     </button>
                   </div>
                 </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '5px' }}>Correo Electrónico:</label>
-              <input type="email" value={patientEmail} onChange={(e) => setPatientEmail(e.target.value)} required style={{ width: '100%', padding: '8px' }} />
-            </div>
 
                 <div style={{ background: "#EDE7D9", padding: 12, borderRadius: 6, marginTop: 8 }}>
                   <label style={{ fontSize: 12, fontWeight: "bold", color: "#6B6A5E", display: "block", marginBottom: 4 }}>
@@ -643,10 +556,6 @@ function AgendaTab({ bookings, services, removeBooking, updateBooking }) {
                     </select>
                   </div>
                 </div>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <div style={{ flex: 1 }}>
-                <label style={{ display: 'block', marginBottom: '5px' }}>Fecha:</label>
-                <input type="date" value={bookingDate} onChange={(e) => setBookingDate(e.target.value)} required style={{ width: '100%', padding: '8px' }} />
               </div>
             );
           })}
@@ -720,9 +629,6 @@ function HistorialClinicoTab({ user }) {
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
                 <strong>{r.patient_name ? `${r.patient_name} (${r.patient_email})` : r.patient_email}</strong>
                 <span style={{ fontSize: 12, color: "#6B6A5E" }}>{r.session_date}</span>
-              <div style={{ flex: 1 }}>
-                <label style={{ display: 'block', marginBottom: '5px' }}>Hora:</label>
-                <input type="time" value={bookingTime} onChange={(e) => setBookingTime(e.target.value)} required style={{ width: '100%', padding: '8px' }} />
               </div>
               <p style={{ margin: 0, fontSize: 14, color: "#26271F", fontStyle: "italic" }}>"{r.notes}"</p>
             </div>
@@ -790,12 +696,6 @@ function ServiciosTab({ services, saveService, deleteService }) {
             <div>
               <label style={{ fontSize: 12, color: "#6B6A5E" }}>Duración (min)</label>
               <input type="number" value={duration} onChange={(e) => setDuration(e.target.value)} placeholder="50" style={{ width: "100%", padding: 8, border: "1px solid #D7CFBC", borderRadius: 4 }} />
-              <label style={{ display: 'block', marginBottom: '5px' }}>Servicio:</label>
-              <select value={service} onChange={(e) => setService(e.target.value)} style={{ width: '100%', padding: '8px' }}>
-                <option value="Fisioterapia General">Fisioterapia General</option>
-                <option value="Rehabilitación Deportiva">Rehabilitación Deportiva</option>
-                <option value="Terapia Manual">Terapia Manual</option>
-              </select>
             </div>
           </div>
           <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
@@ -822,16 +722,9 @@ function ServiciosTab({ services, saveService, deleteService }) {
     </div>
   );
 }
-            <button type="submit" style={{ padding: '12px', background: '#0066cc', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
-              Confirmar Reserva
-            </button>
-          </form>
 
 function HorarioTab({ blockedSlots, toggleBlocked }) {
   const [date, setDate] = useState(todayISO());
-          {statusMsg && <p style={{ marginTop: '15px', fontWeight: 'bold', color: statusMsg.includes('Error') ? 'red' : 'green' }}>{statusMsg}</p>}
-        </section>
-      )}
 
   return (
     <div>
@@ -847,16 +740,6 @@ function HorarioTab({ blockedSlots, toggleBlocked }) {
           );
         })}
       </div>
-      {view === 'admin' && (
-        <section>
-          <h3>Panel Profesional e Historial Clínico</h3>
-          <p style={{ color: '#666' }}>Acceso restringido para gestión de pacientes y consultas.</p>
-          <div style={{ padding: '15px', border: '1px solid #ccc', borderRadius: '6px', marginTop: '10px' }}>
-            <h4>Citas Recientes</h4>
-            <p>Conectado con Supabase. Haz una reserva en la pestaña anterior para ver la sincronización en vivo.</p>
-          </div>
-        </section>
-      )}
     </div>
   );
 }
